@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Button, NavDropdown, Form, Image, Navbar, Nav, Row, Col, Card } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaCamera, FaUserCircle } from 'react-icons/fa';
-import './Dashboard.css'; // 引入自定义样式文件
+import './Dashboard.css';
 
 function Upload() {
     const [selectedImage, setSelectedImage] = useState(null);
     const [preview, setPreview] = useState(null);
+    const [probability, setProbability] = useState(null);
     const [results, setResults] = useState(null);
-    const [suggestions, setSuggestions] = useState(null);
+    const [details, setDetails] = useState(null);
+    const [loading, setLoading] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -22,6 +24,14 @@ function Upload() {
         }
     };
 
+    useEffect(() => {
+        return () => {
+            if (preview) {
+                URL.revokeObjectURL(preview);
+            }
+        };
+    }, [preview]);
+
     const handleUpload = async () => {
         if (!selectedImage) {
             alert('Please select an image first!');
@@ -30,30 +40,34 @@ function Upload() {
 
         const formData = new FormData();
         formData.append('image', selectedImage);
+        setLoading(true);
 
         try {
             const response = await fetch('http://huiyishunjian.natapp1.cc/upload', {
                 method: 'POST',
                 headers: {
-                    // Ensure that the Authorization header is correctly set with the JWT from localStorage
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
                 body: formData,
             });
+            setLoading(false);
             if (response.ok) {
                 const data = await response.json();
                 setResults(data.result);
-                setSuggestions(data.suggestions);
+                setProbability(data.probability)
+                setDetails(data.details);
             } else {
                 console.error('Upload failed');
+                alert('Upload failed. Please try again.');
             }
         } catch (error) {
             console.error('Upload error:', error);
+            setLoading(false);
+            alert('Upload error. Please check your connection.');
         }
     };
 
     const handleLogout = () => {
-        // Clear the JWT stored in localStorage on logout
         localStorage.removeItem('access_token');
         navigate('/login');
     };
@@ -94,29 +108,40 @@ function Upload() {
                             <Button onClick={handleUpload} className="d-inline-block">
                                 上传图片
                             </Button>
-                            {preview && (
-                                <div className="preview-container mt-3">
-                                    <Image src={preview} alt="Image preview" thumbnail />
-                                </div>
-                            )}
-                            {results && (
-                                <Card className="mt-3">
-                                    <Card.Body>
-                                        <Card.Text>检测结果: {results}</Card.Text>
-                                    </Card.Body>
-                                </Card>
-                            )}
-                            {suggestions && (
-                                <Card className="mt-3">
-                                    <Card.Body>
-                                        <Card.Text>相关建议: {suggestions}</Card.Text>
-                                    </Card.Body>
-                                </Card>
-                            )}
                         </Col>
                     </Row>
+                    {preview && (
+                        <Row className="justify-content-center mt-3">
+                            <Col md={4}>
+                                <Image src={preview} alt="Image preview" thumbnail />
+                                {results && (
+                                    <Card className="results-card mt-3"> 
+                                        <Card.Body>
+                                            <Card.Text>检测结果： {results}</Card.Text>
+                                            <Card.Text>可能性：  {probability}</Card.Text>
+                                        </Card.Body>
+                                    </Card>
+                                )}
+                            </Col>
+                            {details && (
+                                <Col md={4}>
+                                    <Card className="details-show">
+                                        <Card.Body>
+                                            <Card.Title></Card.Title>
+                                            {Object.keys(details).map((key) => (
+                                                <Card.Text key={key}>
+                                                    {key}可能性： {details[key].toFixed(2)}%
+                                                </Card.Text>
+                                            ))}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            )}
+                        </Row>
+                    )}
                 </Container>
             </div>
+            {loading && <p>Loading...</p>}
         </>
     );
 }

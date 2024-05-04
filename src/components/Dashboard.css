@@ -86,3 +86,20 @@
     justify-content: center;
     align-items: center;
 }
+
+/* 结果显示区域 */
+.results-card {
+    max-height: 100px;  /* 或其他根据您需要设定的高度 */
+    /* max-width: 550px; */
+    overflow: auto;     /* 如果内容超出高度，显示滚动条 */
+    padding: 10px;      /* 调整填充来减少内部空间 */
+    margin-bottom: 10px; /* 调整与其他组件的间距 */
+  }
+  
+.details-show{
+    max-height: 400px;  /* 或其他根据您需要设定的高度 */
+    /* max-width: 550px; */
+    overflow: auto;     /* 如果内容超出高度，显示滚动条 */
+    padding: 10px;      /* 调整填充来减少内部空间 */
+    margin-bottom: 10px; /* 调整与其他组件的间距 */
+  }
